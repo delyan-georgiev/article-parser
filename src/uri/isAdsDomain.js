@@ -3,17 +3,21 @@
  * @ndaidong
  **/
 
-var bella = require('bellajs');
+import {
+  isString
+} from 'bellajs';
 
-var config = require('../config');
+import {
+  adsDomain
+} from '../config';
 
-var isAdsDomain = (url) => {
-  if (!bella.isString(url)) {
+export var isAdsDomain = (url) => {
+  if (!isString(url)) {
     return false;
   }
-  return config.adsDomain.some((c) => {
+  return adsDomain.some((c) => {
     return url.match(c);
   });
 };
 
-module.exports = isAdsDomain;
+

@@ -3,16 +3,27 @@
  * @ndaidong
  **/
 
-var bella = require('bellajs');
-var fetch = require('node-fetch');
-var Promise = require('bluebird');
+import {
+  encode,
+  stripTags,
+  isArray
+} from 'bellajs';
 
-var urlResolver = require('../uri');
-var config = require('../config');
+import fetch from 'node-fetch';
 
-var {FETCH_OPTIONS} = config;
+import {
+  urlResolver
+} from '../uri';
 
-var getYtid = (lnk) => {
+import {
+  fetchOpt,
+  YouTubeKey,
+  SoundCloudKey,
+  wordsPerMinute
+} from '../config';
+
+
+export var getYtid = (lnk) => {
   let x1 = 'www.youtube.com/watch?';
   let x2 = 'youtu.be/';
   let x3 = 'www.youtube.com/v/';
@@ -49,7 +60,7 @@ var getYtid = (lnk) => {
   return vid;
 };
 
-var toSecond = (duration) => {
+export var toSecond = (duration) => {
   let matches = duration.match(/[0-9]+[HMS]/g);
 
   let seconds = 0;
@@ -76,33 +87,33 @@ var toSecond = (duration) => {
   return seconds;
 };
 
-var isSoundCloud = (src) => {
+export var isSoundCloud = (src) => {
   return src.includes('soundcloud.com');
 };
-var isAudioBoom = (src) => {
+export var isAudioBoom = (src) => {
   return src.includes('audioboom.com');
 };
-var isAudio = (src) => {
+export var isAudio = (src) => {
   return isSoundCloud(src) || isAudioBoom(src);
 };
 
 
-var isYouTube = (src) => {
+export var isYouTube = (src) => {
   return src.includes('youtube.com') || src.includes('youtu.be/');
 };
-var isVimeo = (src) => {
+export var isVimeo = (src) => {
   return src.includes('vimeo.com');
 };
 
-var isMovie = (src) => {
+export var isMovie = (src) => {
   return isYouTube(src) || isVimeo(src);
 };
 
-var estimateAudio = (src) => {
+export var estimateAudio = (src) => {
   return new Promise((resolve, reject) => {
     if (isSoundCloud(src)) {
-      let url = 'http://api.soundcloud.com/resolve.json?url=' + bella.encode(src) + '&client_id=' + config.SoundCloudKey;
-      return fetch(url, FETCH_OPTIONS).then((res) => {
+      let url = 'http://api.soundcloud.com/resolve.json?url=' + encode(src) + '&client_id=' + SoundCloudKey;
+      return fetch(url, fetchOpt).then((res) => {
         return res.json();
       }).then((ob) => {
         if (ob && ob.duration) {
@@ -118,17 +129,17 @@ var estimateAudio = (src) => {
   });
 };
 
-var estimateMovie = (src) => {
+export var estimateMovie = (src) => {
   return new Promise((resolve, reject) => {
     if (isYouTube(src)) {
       let vid = getYtid(src);
-      let url = 'https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=' + vid + '&key=' + config.YouTubeKey;
-      return fetch(url, FETCH_OPTIONS).then((res) => {
+      let url = 'https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=' + vid + '&key=' + YouTubeKey;
+      return fetch(url, fetchOpt).then((res) => {
         return res.json();
       }).then((ob) => {
         if (ob && ob.items) {
           let items = ob.items;
-          if (bella.isArray(items) && items.length > 0) {
+          if (isArray(items) && items.length > 0) {
             let item = items[0].contentDetails || false;
             if (item && item.duration) {
               let duration = toSecond(item.duration);
@@ -141,7 +152,7 @@ var estimateMovie = (src) => {
         return reject(e);
       });
     } else if (isVimeo(src)) {
-      return fetch('https://vimeo.com/api/oembed.json?url=' + src, FETCH_OPTIONS).then((res) => {
+      return fetch('https://vimeo.com/api/oembed.json?url=' + src, fetchOpt).then((res) => {
         return res.json();
       }).then((ob) => {
         if (ob && ob.duration) {
@@ -157,15 +168,15 @@ var estimateMovie = (src) => {
   });
 };
 
-var estimateArticle = (content) => {
-  let text = bella.stripTags(content);
+export var estimateArticle = (content) => {
+  let text = stripTags(content);
   let words = text.trim().split(/\s+/g).length;
-  let minToRead = words / config.wordsPerMinute;
+  let minToRead = words / wordsPerMinute;
   let secToRead = Math.ceil(minToRead * 60);
   return secToRead;
 };
 
-var estimate = (source) => {
+export var estimate = (source) => {
   return new Promise((resolve) => {
     if (urlResolver.isValidURL(source)) {
       if (isAudio(source)) {
@@ -178,16 +189,3 @@ var estimate = (source) => {
   });
 };
 
-module.exports = {
-  estimate,
-  isYouTube,
-  isVimeo,
-  isSoundCloud,
-  isAudioBoom,
-  isMovie,
-  isAudio,
-  getYtid,
-  toSecond,
-  estimateAudio,
-  estimateMovie
-};

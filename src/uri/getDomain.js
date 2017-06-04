@@ -3,11 +3,11 @@
  * @ndaidong
  **/
 
-var URL = require('url');
+import URL from 'url';
 
-var isValidURL = require('./isValidURL');
+import isValidURL from './isValidURL';
 
-var getDomain = (url) => {
+export var getDomain = (url) => {
   if (!isValidURL(url)) {
     return false;
   }
@@ -19,4 +19,3 @@ var getDomain = (url) => {
   return dom;
 };
 
-module.exports = getDomain;

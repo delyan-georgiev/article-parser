@@ -3,17 +3,20 @@
  * @ndaidong
  **/
 
-var bella = require('bellajs');
+import {
+  isString
+} from 'bellajs';
 
-var config = require('../config');
+import {
+  exceptDomain
+} from '../config';
 
-var isExceptDomain = (url) => {
-  if (!bella.isString(url)) {
+export var isExceptDomain = (url) => {
+  if (!isString(url)) {
     return false;
   }
-  return config.exceptDomain.some((c) => {
+  return exceptDomain.some((c) => {
     return url.match(c);
   });
 };
 
-module.exports = isExceptDomain;

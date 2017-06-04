@@ -3,9 +3,9 @@
  * @ndaidong
  **/
 
-var isInBlackList = require('./isInBlackList');
+import isInBlackList from './isInBlackList';
 
-var isValidURL = (str) => {
+export var isValidURL = (str) => {
   if (!str) {
     return false;
   }
@@ -23,4 +23,3 @@ var isValidURL = (str) => {
   return true;
 };
 
-module.exports = isValidURL;

@@ -3,10 +3,8 @@ os:
 sudo: false
 language: node_js
 node_js:
-  - "7.10"
-  - "7.6"
+  - "8.0"
   - "7.0"
-  - "6.9.2"
   - "6.0"
 addons:
   apt:
@@ -18,5 +16,3 @@ install:
   - export CXX=g++-4.8
   - $CXX --version
   - npm i
-after_success:
-  - npm run coveralls

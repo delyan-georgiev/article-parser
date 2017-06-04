@@ -1,21 +1,9 @@
-var isInBlackList = require('./isInBlackList');
-var isAdsDomain = require('./isAdsDomain');
-var isExceptDomain = require('./isExceptDomain');
-var isValidURL = require('./isValidURL');
-var removeUTM = require('./removeUTM');
-var absolutify = require('./absolutify');
-var purify = require('./purify');
-var getDomain = require('./getDomain');
-var absolutifyContentSrc = require('./absolutifyContentSrc');
-
-module.exports = {
-  isInBlackList,
-  isAdsDomain,
-  isExceptDomain,
-  isValidURL,
-  removeUTM,
-  absolutify,
-  purify,
-  getDomain,
-  absolutifyContentSrc
-};
+export * from './isInBlackList';
+export * from './isAdsDomain';
+export * from './isExceptDomain';
+export * from './isValidURL';
+export * from './removeUTM';
+export * from './absolutify';
+export * from './purify';
+export * from './getDomain';
+export * from './absolutifyContentSrc';

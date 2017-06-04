@@ -3,11 +3,11 @@
  * @ndaidong
  **/
 
-var cheerio = require('cheerio');
+import cheerio from 'cheerio';
 
-var absolutify = require('./absolutify');
+import absolutify from './absolutify';
 
-var absolutifyContentSrc = (s, url) => {
+export var absolutifyContentSrc = (s, url) => {
   let $ = cheerio.load(s, {
     normalizeWhitespace: true,
     decodeEntities: true
@@ -29,4 +29,3 @@ var absolutifyContentSrc = (s, url) => {
   return $.html();
 };
 
-module.exports = absolutifyContentSrc;

@@ -3,17 +3,20 @@
  * @ndaidong
  **/
 
-var bella = require('bellajs');
+import {
+  isString
+} from 'bellajs';
 
-var config = require('../config');
+import {
+  blackList
+} from '../config';
 
-var isInBlackList = (url) => {
-  if (!bella.isString(url)) {
+export var isInBlackList = (url) => {
+  if (!isString(url)) {
     return false;
   }
-  return config.blackList.some((c) => {
+  return blackList.some((c) => {
     return url.match(c);
   });
 };
 
-module.exports = isInBlackList;

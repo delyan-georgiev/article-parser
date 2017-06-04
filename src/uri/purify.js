@@ -3,13 +3,13 @@
  * @ndaidong
  **/
 
-var URL = require('url');
+import URL from 'url';
 
-var isAdsDomain = require('./isAdsDomain');
-var isValidURL = require('./isValidURL');
-var removeUTM = require('./removeUTM');
+import isAdsDomain from './isAdsDomain';
+import isValidURL from './isValidURL';
+import removeUTM from './removeUTM';
 
-var purify = (url) => {
+export var purify = (url) => {
   url = removeUTM(url);
   if (!isValidURL(url)) {
     return false;
@@ -23,4 +23,3 @@ var purify = (url) => {
   return u + g.search;
 };
 
-module.exports = purify;

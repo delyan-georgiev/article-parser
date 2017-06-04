@@ -3,17 +3,17 @@
  * @ndaidong
 */
 
-var cheerio = require('cheerio');
+import cheerio from 'cheerio';
 
-var {
+import {
   isValidURL
-} = require('../uri');
+} from '../uri';
 
 var strtolower = (s) => {
   return s ? s.toLowerCase() : '';
 };
 
-var parseMeta = (html, url) => {
+export var parseMeta = (html, url) => {
 
   let entry = {
     url,
@@ -114,4 +114,3 @@ var parseMeta = (html, url) => {
   return entry;
 };
 
-module.exports = parseMeta;

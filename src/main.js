@@ -3,20 +3,32 @@
  * @ndaidong
  **/
 
-var bella = require('bellajs');
-var Promise = require('bluebird');
-var fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
-var debug = require('debug');
+import debug from 'debug';
 var error = debug('artparser:error');
 var info = debug('artparser:info');
 
-var config = require('./config');
-var {configure, FETCH_OPTIONS} = config;
+import {
+  truncate,
+  stripTags,
+  createAlias,
+  time
+} from 'bellajs';
 
-var Duration = require('./duration');
+import {
+  stabilize
+} from 'stabilize.js';
 
-var {
+import {
+  fetchOpt
+} from './config';
+
+import {
+  Duration
+} from './duration';
+
+import {
   absolutify,
   purify,
   removeUTM,
@@ -24,14 +36,18 @@ var {
   isValidURL,
   isExceptDomain,
   absolutifyContentSrc
-} = require('./uri');
+} from './uri';
 
-var {
-  parseWithEmbedly,
+import {
   parseMeta,
   getArticle
-} = require('./parser');
+} from './parser';
 
+var ucwords = (s) => {
+  return s.toLowerCase().replace(/\b[a-z]/g, (letter) => {
+    return letter.toUpperCase();
+  });
+};
 
 var getRemoteContent = (input) => {
 
@@ -44,7 +60,7 @@ var getRemoteContent = (input) => {
 
     let _url = '';
 
-    fetch(url, FETCH_OPTIONS)
+    fetch(url, fetchOpt)
       .then((res) => {
         let {
           ok,
@@ -165,7 +181,7 @@ var standalizeCanonicals = (input) => {
     return isValidURL(url);
   });
 
-  input.canonicals = bella.stabilize(arr).unique();
+  input.canonicals = stabilize(arr).unique();
 
   info(`Finish standalizing canonicals for ${input.url}`);
 
@@ -196,8 +212,8 @@ var standalizeDescription = (input) => {
 
   info(`Start standalizing description for ${url}`);
 
-  let s = bella.stripTags(description || content);
-  input.description = bella.truncate(s, 156);
+  let s = stripTags(description || content);
+  input.description = truncate(s, 156);
 
   info(`Finish standalizing description for ${url}`);
   return Promise.resolve(input);
@@ -232,7 +248,7 @@ var standalizeAuthor = (input) => {
 
   if (author && author.indexOf(' ') > 0) {
     info(`Before: ${author}`);
-    input.author = bella.ucwords(author);
+    input.author = ucwords(author);
     info(`After: ${input.author}`);
   }
 
@@ -255,11 +271,11 @@ var standalizeStuff = (input) => {
     input.source = domain;
   }
 
-  let t = bella.time();
-  input.alias = bella.createAlias(title) + '-' + t;
+  let t = time();
+  input.alias = createAlias(title) + '-' + t;
 
-  let tit = bella.stripTags(title);
-  input.title = bella.truncate(tit, 118);
+  let tit = stripTags(title);
+  input.title = truncate(tit, 118);
 
   info(`Almost done with ${url}`);
 
@@ -298,7 +314,7 @@ var estimateDuration = (input) => {
   });
 };
 
-var extract = (link) => {
+export var extract = (link) => {
 
   return new Promise((resolve, reject) => {
 
@@ -347,16 +363,9 @@ var extract = (link) => {
   });
 };
 
-module.exports = {
-  configure,
-  getConfig: () => {
-    return bella.clone(config);
-  },
-  extract,
-  getArticle,
-  getDomain,
-  parseMeta,
-  parseWithEmbedly,
-  absolutify,
-  purify
-};
+let url = 'https://medium.com/reloading/javascript-start-up-performance-69200f43b201';
+extract(url).then((art) => {
+  console.log(art);
+}).catch((err) => {
+  console.log(err);
+});

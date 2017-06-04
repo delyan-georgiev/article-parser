@@ -3,16 +3,15 @@
  * @ndaidong
 */
 
-var Promise = require('bluebird');
-var cheerio = require('cheerio');
-var sanitize = require('sanitize-html');
-var read = require('es6-readability');
+import cheerio from 'cheerio';
+import sanitize from 'sanitize-html';
+import read from 'es6-readability';
 
-var debug = require('debug');
+import debug from 'debug';
 var error = debug('artparser:error');
 var info = debug('artparser:info');
 
-var config = require('../config');
+import config from '../config';
 
 var extractByClass = (input) => {
 
@@ -111,7 +110,7 @@ var normalize = (input) => {
   return Promise.resolve(input.content);
 };
 
-var getArticle = (html) => {
+export var getArticle = (html) => {
   return new Promise((resolve, reject) => {
     info('Start extracting article from HTML');
     extractWithReadability({
@@ -132,4 +131,3 @@ var getArticle = (html) => {
   });
 };
 
-module.exports = getArticle;

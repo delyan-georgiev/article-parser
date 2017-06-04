@@ -3,28 +3,29 @@
  * @ndaidong
 */
 
-var Promise = require('bluebird');
-var fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
-var debug = require('debug');
+import debug from 'debug';
 var error = debug('artparser:error');
 var info = debug('artparser:info');
 
-var config = require('../config');
 
-var {FETCH_OPTIONS} = config;
+import {
+  fetchOpt,
+  EmbedlyKey
+} from '../config';
 
-var parseWithEmbedly = (url, key = '') => {
+export var parseWithEmbedly = (url, key = '') => {
   return new Promise((resolve, reject) => {
 
     info(`Start parsing with Embedly...`);
     info(url);
 
     let u = encodeURIComponent(url);
-    let k = key || config.EmbedlyKey || '';
+    let k = key || EmbedlyKey || '';
     let target = `http://api.embed.ly/1/extract?key=${k}&url=${u}&format=json`;
 
-    return fetch(target, FETCH_OPTIONS).then((res) => {
+    return fetch(target, fetchOpt).then((res) => {
       info(`Loaded data from Embedly.`);
       return res.json();
     }).then((o) => {
@@ -68,4 +69,3 @@ var parseWithEmbedly = (url, key = '') => {
   });
 };
 
-module.exports = parseWithEmbedly;

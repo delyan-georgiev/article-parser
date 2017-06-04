@@ -3,13 +3,16 @@
  * @ndaidong
  **/
 
-var URL = require('url');
-var bella = require('bellajs');
+import URL from 'url';
 
-var isValidURL = require('./isValidURL');
+import {
+  isString
+} from 'bellajs';
 
-var absolutify = (fullUrl, relativeUrl) => {
-  if (!isValidURL(fullUrl) || !bella.isString(relativeUrl)) {
+import isValidURL from './isValidURL';
+
+export var absolutify = (fullUrl, relativeUrl) => {
+  if (!isValidURL(fullUrl) || !isString(relativeUrl)) {
     return '';
   }
   let parsed = URL.parse(fullUrl);
@@ -17,4 +20,3 @@ var absolutify = (fullUrl, relativeUrl) => {
   return URL.resolve(first, relativeUrl);
 };
 
-module.exports = absolutify;

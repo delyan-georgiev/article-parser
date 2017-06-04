@@ -3,9 +3,9 @@
  * @ndaidong
  **/
 
-var isValidURL = require('./isValidURL');
+import isValidURL from './isValidURL';
 
-var removeUTM = (url) => {
+export var removeUTM = (url) => {
   if (!isValidURL(url)) {
     return false;
   }
@@ -24,4 +24,3 @@ var removeUTM = (url) => {
   return url;
 };
 
-module.exports = removeUTM;
