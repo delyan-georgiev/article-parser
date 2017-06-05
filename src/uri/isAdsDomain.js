@@ -8,8 +8,12 @@ import {
 } from 'bellajs';
 
 import {
-  adsDomain
+  config
 } from '../config';
+
+var {
+  adsDomain
+} = config;
 
 export var isAdsDomain = (url) => {
   if (!isString(url)) {

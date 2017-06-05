@@ -3,7 +3,7 @@
  * @ndaidong
  **/
 
-import isInBlackList from './isInBlackList';
+import {isInBlackList} from './isInBlackList';
 
 export var isValidURL = (str) => {
   if (!str) {
@@ -22,4 +22,3 @@ export var isValidURL = (str) => {
   }
   return true;
 };
-

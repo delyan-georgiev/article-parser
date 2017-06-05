@@ -11,7 +11,13 @@ import debug from 'debug';
 var error = debug('artparser:error');
 var info = debug('artparser:info');
 
-import config from '../config';
+import {
+  config
+} from '../config';
+
+var {
+  htmlRules
+} = config;
 
 var extractByClass = (input) => {
 
@@ -97,7 +103,7 @@ var normalize = (input) => {
   } = input;
 
   if (content) {
-    let s = sanitize(content, config.htmlRules);
+    let s = sanitize(content, htmlRules);
     let $ = cheerio.load(s, {
       normalizeWhitespace: true,
       decodeEntities: true

@@ -13,7 +13,7 @@ var nock = require('nock');
 
 var {
   extract
-} = require('../../../');
+} = require('../../../src/main');
 
 var hasRequiredKeys = (o) => {
   var structure = [
@@ -37,7 +37,7 @@ var hasRequiredKeys = (o) => {
 };
 
 const URL = 'https://medium.com/@ndaidong/setup-rocket-chat-within-10-minutes-2b00f3366c6';
-const HTML = fs.readFileSync('./test/fetchedData.txt', 'utf8');
+const HTML = fs.readFileSync('./tests/fetchedData.txt', 'utf8');
 
 (() => {
 
@@ -89,7 +89,7 @@ const HTML = fs.readFileSync('./test/fetchedData.txt', 'utf8');
 
   test(`Testing with .extract(${URL})`, (t) => {
     extract(URL).catch((e) => {
-      let msg = 'Cannot read property \'startsWith\' of null';
+      let msg = `TypeError: Cannot read property 'startsWith' of null`;
       t.equals(e.message, msg, 'It must return an error.');
     }).finally(t.end);
   });
@@ -104,7 +104,7 @@ const HTML = fs.readFileSync('./test/fetchedData.txt', 'utf8');
 
   test(`Testing with .extract(${URL})`, (t) => {
     extract(URL).catch((e) => {
-      let msg = 'Cannot read property \'startsWith\' of null';
+      let msg = `TypeError: Cannot read property 'startsWith' of null`;
       t.equals(e.message, msg, 'It must return an error.');
     }).finally(t.end);
   });
@@ -122,7 +122,7 @@ const HTML = fs.readFileSync('./test/fetchedData.txt', 'utf8');
 
   test(`Testing with .extract(${URL})`, (t) => {
     extract(URL).catch((e) => {
-      let msg = `Fetching failed for ${url}`;
+      let msg = `Error: Fetching failed for ${url}`;
       t.equals(e.message, msg, 'It must return an error.');
     }).finally(t.end);
   });
@@ -140,7 +140,7 @@ const HTML = fs.readFileSync('./test/fetchedData.txt', 'utf8');
 
   test(`Testing with .extract(${URL})`, (t) => {
     extract(URL).catch((e) => {
-      let msg = `Could not handle ${contentType}`;
+      let msg = `Error: Could not handle ${contentType}`;
       t.equals(e.message, msg, 'It must return an error.');
     }).finally(t.end);
   });

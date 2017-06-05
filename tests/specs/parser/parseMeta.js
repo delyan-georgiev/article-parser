@@ -7,12 +7,12 @@ var fs = require('fs');
 var test = require('tape');
 var bella = require('bellajs');
 
-var AP = require('../../../');
+var AP = require('../../../src/main');
 
 var parseMeta = AP.parseMeta;
 
 var url = 'https://medium.com/@ndaidong/setup-rocket-chat-within-10-minutes-2b00f3366c6';
-var html = fs.readFileSync('./test/fetchedData.txt', 'utf8');
+var html = fs.readFileSync('./tests/fetchedData.txt', 'utf8');
 
 var hasRequiredKeys = (o) => {
   let structure = [

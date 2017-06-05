@@ -8,8 +8,12 @@ import {
 } from 'bellajs';
 
 import {
-  blackList
+  config
 } from '../config';
+
+var {
+  blackList
+} = config;
 
 export var isInBlackList = (url) => {
   if (!isString(url)) {

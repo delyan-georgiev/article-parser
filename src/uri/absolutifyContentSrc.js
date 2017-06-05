@@ -5,7 +5,7 @@
 
 import cheerio from 'cheerio';
 
-import absolutify from './absolutify';
+import {absolutify} from './absolutify';
 
 export var absolutifyContentSrc = (s, url) => {
   let $ = cheerio.load(s, {

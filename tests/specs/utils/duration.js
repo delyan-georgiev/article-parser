@@ -3,27 +3,23 @@
  * @ndaidong
  */
 
-var path = require('path');
 var test = require('tape');
 var bella = require('bellajs');
 
 var Chance = require('chance');
 var chance = new Chance();
 
-var rootDir = '../../../src/';
-var Duration = require(path.join(rootDir, 'duration'));
-
-var isYouTube = Duration.isYouTube;
-var isVimeo = Duration.isVimeo;
-var isSoundCloud = Duration.isSoundCloud;
-var isAudioBoom = Duration.isAudioBoom;
-
-var estimateMovie = Duration.estimateMovie;
-var estimateAudio = Duration.estimateAudio;
-var estimate = Duration.estimate;
-
-var getYtid = Duration.getYtid;
-var toSecond = Duration.toSecond;
+import {
+  isYouTube,
+  isVimeo,
+  isSoundCloud,
+  isAudioBoom,
+  estimateMovie,
+  estimateAudio,
+  estimate,
+  getYtid,
+  toSecond
+} from '../../../src/duration';
 
 var YtUrl = 'https://www.youtube.com/watch?v=klzLdzpPcQw';
 test('Testing isYouTube method:', (assert) => {
@@ -79,7 +75,7 @@ test('Testing isAudioBoom method:', (assert) => {
 });
 
 var eachURL = (url) => {
-  test(`Testing estimate(${url})`, {timeout: 15000}, (t) => {
+  test(`Testing estimate(${url})`, (t) => {
     estimate(url).then((d) => {
       t.ok(bella.isNumber(d), `Duration (${d}) must be a number.`);
       t.ok(d > 0, `Duration (${d}) is greater than 0.`);

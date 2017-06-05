@@ -5,9 +5,9 @@
 
 import URL from 'url';
 
-import isAdsDomain from './isAdsDomain';
-import isValidURL from './isValidURL';
-import removeUTM from './removeUTM';
+import {isAdsDomain} from './isAdsDomain';
+import {isValidURL} from './isValidURL';
+import {removeUTM} from './removeUTM';
 
 export var purify = (url) => {
   url = removeUTM(url);

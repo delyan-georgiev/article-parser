@@ -3,24 +3,30 @@
  * @ndaidong
  **/
 
+import debug from 'debug';
+var error = debug('artparser:error');
+
 import {
   encode,
-  stripTags,
-  isArray
+  stripTags
 } from 'bellajs';
 
 import fetch from 'node-fetch';
 
 import {
-  urlResolver
+  isValidURL
 } from '../uri';
 
 import {
+  config
+} from '../config';
+
+var {
   fetchOpt,
   YouTubeKey,
   SoundCloudKey,
   wordsPerMinute
-} from '../config';
+} = config;
 
 
 export var getYtid = (lnk) => {
@@ -109,63 +115,56 @@ export var isMovie = (src) => {
   return isYouTube(src) || isVimeo(src);
 };
 
-export var estimateAudio = (src) => {
-  return new Promise((resolve, reject) => {
-    if (isSoundCloud(src)) {
-      let url = 'http://api.soundcloud.com/resolve.json?url=' + encode(src) + '&client_id=' + SoundCloudKey;
-      return fetch(url, fetchOpt).then((res) => {
-        return res.json();
-      }).then((ob) => {
-        if (ob && ob.duration) {
-          let duration = Math.round(ob.duration / 1000);
-          return resolve(duration);
-        }
-        return reject(new Error('Invalid format'));
-      }).catch((e) => {
-        return reject(e);
-      });
+export var estimateAudio = async (src) => {
+  if (!isSoundCloud(src)) {
+    throw new Error(`Not supported ${src}`);
+  }
+  let url = `http://api.soundcloud.com/resolve.json?url=${encode(src)}&client_id=${SoundCloudKey}`;
+  try {
+    let res = await fetch(url, fetchOpt);
+    let ob = await res.json();
+    if (ob && ob.duration) {
+      let duration = Math.round(ob.duration / 1000);
+      return duration;
     }
-    return reject(new Error('Not supported ' + src));
-  });
+  } catch (err) {
+    throw new Error(err);
+  }
+  return false;
 };
 
-export var estimateMovie = (src) => {
-  return new Promise((resolve, reject) => {
+export var estimateMovie = async (src) => {
+  try {
+
     if (isYouTube(src)) {
       let vid = getYtid(src);
-      let url = 'https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=' + vid + '&key=' + YouTubeKey;
-      return fetch(url, fetchOpt).then((res) => {
-        return res.json();
-      }).then((ob) => {
-        if (ob && ob.items) {
-          let items = ob.items;
-          if (isArray(items) && items.length > 0) {
-            let item = items[0].contentDetails || false;
-            if (item && item.duration) {
-              let duration = toSecond(item.duration);
-              return resolve(duration);
-            }
-          }
+      let url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${vid}&key=${YouTubeKey}`;
+      let res = await fetch(url, fetchOpt);
+      let ob = await res.json();
+
+      if (ob && ob.items) {
+        let items = ob.items || [];
+        let item = items.length > 0 ? items[0].contentDetails : false;
+        if (item && item.duration) {
+          let duration = toSecond(item.duration);
+          return duration;
         }
-        return reject(new Error('Invalid format'));
-      }).catch((e) => {
-        return reject(e);
-      });
-    } else if (isVimeo(src)) {
-      return fetch('https://vimeo.com/api/oembed.json?url=' + src, fetchOpt).then((res) => {
-        return res.json();
-      }).then((ob) => {
-        if (ob && ob.duration) {
-          let duration = ob.duration;
-          return resolve(duration);
-        }
-        return reject(new Error('Invalid format'));
-      }).catch((e) => {
-        return reject(e);
-      });
+      }
     }
-    return reject(new Error('Not supported ' + src));
-  });
+
+    if (isVimeo(src)) {
+      let url = `https://vimeo.com/api/oembed.json?url=${src}`;
+      let res = await fetch(url, fetchOpt);
+      let ob = res.json();
+      if (ob && ob.duration) {
+        return ob.duration;
+      }
+    }
+
+  } catch (err) {
+    error(err);
+  }
+  throw new Error(`Could not estimate duration for ${src}`);
 };
 
 export var estimateArticle = (content) => {
@@ -176,16 +175,16 @@ export var estimateArticle = (content) => {
   return secToRead;
 };
 
-export var estimate = (source) => {
-  return new Promise((resolve) => {
-    if (urlResolver.isValidURL(source)) {
-      if (isAudio(source)) {
-        return resolve(estimateAudio(source));
-      } else if (isMovie(source)) {
-        return resolve(estimateMovie(source));
-      }
-    }
-    return resolve(estimateArticle(source));
-  });
+export var estimate = async (source) => {
+  let t = 0;
+  if (isAudio(source)) {
+    t = await estimateAudio(source);
+  }
+  if (isMovie(source)) {
+    t = await estimateMovie(source);
+  } else if (!isValidURL(source)) {
+    t = await estimateArticle(source);
+  }
+  return t;
 };
 

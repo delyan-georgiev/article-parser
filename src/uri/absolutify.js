@@ -9,7 +9,7 @@ import {
   isString
 } from 'bellajs';
 
-import isValidURL from './isValidURL';
+import {isValidURL} from './isValidURL';
 
 export var absolutify = (fullUrl, relativeUrl) => {
   if (!isValidURL(fullUrl) || !isString(relativeUrl)) {

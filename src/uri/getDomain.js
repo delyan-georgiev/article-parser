@@ -5,7 +5,7 @@
 
 import URL from 'url';
 
-import isValidURL from './isValidURL';
+import {isValidURL} from './isValidURL';
 
 export var getDomain = (url) => {
   if (!isValidURL(url)) {

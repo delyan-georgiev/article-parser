@@ -11,18 +11,22 @@ var error = debug('artparser:error');
 
 var nock = require('nock');
 
-var AP = require('../../../');
+import {
+  configure,
+  parseWithEmbedly
+} from '../../../src/main';
+
+let config = configure();
+
 var {
   EmbedlyKey
-} = AP.getConfig();
+} = config;
 
-var parseWithEmbedly = AP.parseWithEmbedly;
 
 const URL = 'https://medium.com/@ndaidong/setup-rocket-chat-within-10-minutes-2b00f3366c6';
-const JSON = fs.readFileSync('./test/embedlyData.txt', 'utf8');
+const JSON = fs.readFileSync('./tests/embedlyData.txt', 'utf8');
 
 (() => {
-
   nock('http://api.embed.ly')
     .get(`/1/extract?key=${EmbedlyKey}&url=${encodeURIComponent(URL)}&format=json`)
     .reply(200, JSON);

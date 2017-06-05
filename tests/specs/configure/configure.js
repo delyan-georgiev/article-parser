@@ -6,7 +6,7 @@
 var test = require('tape');
 var bella = require('bellajs');
 
-var AP = require('../../../');
+var AP = require('../../../src/main');
 
 var sample = {
   timeout: 10,
@@ -48,8 +48,7 @@ var fake = Object.create(AP);
 
 test('Testing "configure" method:', (assert) => {
 
-  fake.configure(sample);
-  let config = fake.getConfig();
+  let config = fake.configure(sample);
 
   assert.comment('(Call config object is C, so:)');
   assert.ok(bella.isObject(config), 'C must be an object.');
@@ -73,7 +72,7 @@ test('Testing "configure" method:', (assert) => {
 
   assert.deepEqual(config.wordsPerMinute, sample.wordsPerMinute, `C.wordsPerMinute must be ${sample.wordsPerMinute}`);
 
-  assert.deepEqual(config.FETCH_OPTIONS.timeout, sample.timeout, `C.timeout must be ${sample.timeout}`);
+  assert.deepEqual(config.fetchOpt.timeout, sample.timeout, `C.timeout must be ${sample.timeout}`);
 
   assert.end();
 });

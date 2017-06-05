@@ -9,11 +9,14 @@ import debug from 'debug';
 var error = debug('artparser:error');
 var info = debug('artparser:info');
 
-
 import {
+  config
+} from '../config';
+
+var {
   fetchOpt,
   EmbedlyKey
-} from '../config';
+} = config;
 
 export var parseWithEmbedly = (url, key = '') => {
   return new Promise((resolve, reject) => {

@@ -8,8 +8,12 @@ import {
 } from 'bellajs';
 
 import {
-  exceptDomain
+  config
 } from '../config';
+
+var {
+  exceptDomain
+} = config;
 
 export var isExceptDomain = (url) => {
   if (!isString(url)) {

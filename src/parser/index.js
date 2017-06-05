@@ -1,4 +1,4 @@
 export * from './parseWithEmbedly';
 export * from './parseMeta';
-export * from './getMainArticle';
+export * from './getArticle';
 

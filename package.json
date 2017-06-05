@@ -12,7 +12,7 @@
   "module": "./src/main",
   "jsnext:main": "./src/main",
   "engines": {
-    "node": ">= 4.0"
+    "node": ">= 6.0"
   },
   "scripts": {
     "lint": "eslint ./src ./tests",
@@ -32,6 +32,7 @@
     "debug": "2.x.x",
     "es6-readability": "0.x.x",
     "node-fetch": "1.x.x",
+    "oembed-auto-es6": "1.x.x",
     "sanitize-html": "1.x.x",
     "stabilize.js": "2.x.x"
   },

@@ -3,21 +3,19 @@
  * @ndaidong
  */
 
-var path = require('path');
 var test = require('tape');
 
-var rootDir = '../../../src/';
-var UR = require(path.join(rootDir, 'uri'));
+import {
+  absolutify,
+  purify,
+  getDomain,
+  removeUTM,
+  isValidURL,
+  isAdsDomain,
+  isExceptDomain,
+  isInBlackList
+} from '../../../src/uri';
 
-var absolutify = UR.absolutify;
-var purify = UR.purify;
-var getDomain = UR.getDomain;
-var removeUTM = UR.removeUTM;
-
-var isValidURL = UR.isValidURL;
-var isAdsDomain = UR.isAdsDomain;
-var isExceptDomain = UR.isExceptDomain;
-var isInBlackList = UR.isInBlackList;
 
 test('Testing "absolutify" method:', (assert) => {
   let imgSrc = absolutify('https://www.awesome.com/articles/hello-world.html', '../images/avatar.png');

@@ -7,11 +7,11 @@ var fs = require('fs');
 var test = require('tape');
 var bella = require('bellajs');
 
-var AP = require('../../../');
+var AP = require('../../../src/main');
 
 var getArticle = AP.getArticle;
 
-var html = fs.readFileSync('./test/fetchedData.txt', 'utf8');
+var html = fs.readFileSync('./tests/fetchedData.txt', 'utf8');
 
 test('Testing getArticle method:', (assert) => {
   getArticle(html).then((article) => {

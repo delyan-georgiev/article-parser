@@ -3,9 +3,10 @@
  * @ndaidong
  **/
 
-import isValidURL from './isValidURL';
+import {isValidURL} from './isValidURL';
 
 export var removeUTM = (url) => {
+
   if (!isValidURL(url)) {
     return false;
   }

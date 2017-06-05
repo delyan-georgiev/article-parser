@@ -3,11 +3,15 @@
  * @ndaidong
  **/
 
-import fetch from 'node-fetch';
-
 import debug from 'debug';
 var error = debug('artparser:error');
 var info = debug('artparser:info');
+
+import fetch from 'node-fetch';
+
+import {
+  extract as oeExtract
+} from 'oembed-auto-es6';
 
 import {
   truncate,
@@ -21,11 +25,22 @@ import {
 } from 'stabilize.js';
 
 import {
+  config
+} from './config';
+
+let {
   fetchOpt
+} = config;
+
+export {
+  config,
+  configure
 } from './config';
 
 import {
-  Duration
+  isMovie,
+  isAudio,
+  estimate
 } from './duration';
 
 import {
@@ -43,57 +58,57 @@ import {
   getArticle
 } from './parser';
 
+export {
+  parseMeta,
+  getArticle,
+  parseWithEmbedly
+} from './parser';
+
 var ucwords = (s) => {
   return s.toLowerCase().replace(/\b[a-z]/g, (letter) => {
     return letter.toUpperCase();
   });
 };
 
-var getRemoteContent = (input) => {
+var getRemoteContent = async (input) => {
 
-  return new Promise((resolve, reject) => {
-    let {
-      url
-    } = input;
+  let {
+    url
+  } = input;
 
-    info(`Start fetching HTML content from ${url}`);
+  info(`Start fetching HTML content from ${url}`);
 
+  try {
     let _url = '';
+    let res = await fetch(url, fetchOpt);
 
-    fetch(url, fetchOpt)
-      .then((res) => {
-        let {
-          ok,
-          status,
-          headers
-        } = res;
-        if (!ok || status !== 200) {
-          return reject(new Error(`Fetching failed for ${url}`));
-        }
-        let contentType = headers.get('content-type');
-        if (!contentType.startsWith('text/')) {
-          return reject(new Error(`Could not handle ${contentType}`));
-        }
-        info(`Retrieved HTML content from ${url}`);
-        _url = purify(res.url);
-        return res.text();
-      })
-      .then((html) => {
-        info(`Finish fetching HTML content from ${url}`);
-        if (!html) {
-          info('Returned HTML is empty. Exit process.');
-          return reject(new Error(`No HTML content retrieved for ${url}`));
-        }
-        input.canonicals.push(_url);
-        input.url = _url;
-        input.html = html;
-        return resolve(input);
-      }).catch((err) => {
-        error(`Error while fetching remote data from "${url}"`);
-        error(err);
-        return reject(err);
-      });
-  });
+    if (!res.ok || res.status !== 200) {
+      throw new Error(`Fetching failed for ${url}`);
+    }
+
+    let contentType = res.headers.get('content-type');
+    if (!contentType.startsWith('text/')) {
+      throw new Error(`Could not handle ${contentType}`);
+    }
+
+    info(`Retrieved HTML content from ${url}`);
+    _url = purify(res.url);
+
+    let html = await res.text();
+    if (!html) {
+      info('Returned HTML is empty. Exit process.');
+      throw new Error(`No HTML content retrieved for ${url}`);
+    }
+
+    input.canonicals.push(_url);
+    input.url = _url;
+    input.html = html;
+
+    return input;
+  } catch (err) {
+    error(`Error while fetching remote data from "${url}"`);
+    throw new Error(err);
+  }
 };
 
 var extractMetaData = (input) => {
@@ -136,30 +151,29 @@ var extractMetaData = (input) => {
   return Promise.resolve(input);
 };
 
-var extractArticle = (input) => {
+var extractArticle = async (input) => {
 
-  return new Promise((resolve, reject) => {
-    let {
-      url,
-      html
-    } = input;
+  let {
+    url,
+    html
+  } = input;
 
+  try {
     info(`Start extracting main article for ${url}`);
 
-    getArticle(html).then((content) => {
-      info(`Finish extracting main article for ${url}`);
-      if (content) {
-        info(`Determined main article for ${url}`);
-        input.content = content;
-        return resolve(input);
-      }
-      return reject(new Error('No article extracted. Cancel process.'));
-    }).catch((err) => {
-      error(`Error while extracting main article for ${url}`);
-      error(err);
-      return reject(err);
-    });
-  });
+    let content = await getArticle(html);
+
+    info(`Finish extracting main article for ${url}`);
+    if (content) {
+      info(`Determined main article for ${url}`);
+      input.content = content;
+      return input;
+    }
+    throw new Error('No article extracted. Cancel process.');
+  } catch (err) {
+    error(`Error while extracting main article for ${url}`);
+    throw new Error(err);
+  }
 };
 
 var standalizeCanonicals = (input) => {
@@ -282,48 +296,72 @@ var standalizeStuff = (input) => {
   return Promise.resolve(input);
 };
 
-var estimateDuration = (input) => {
-  return new Promise((resolve, reject) => {
-    let {
-      url,
-      title,
-      content
-    } = input;
+var extractOEmbed = async (input) => {
+  let {
+    url
+  } = input;
 
+  try {
     info(`Start estimating duration for ${url}`);
+    let oembed = await oeExtract(url);
+    let {
+      type,
+      html,
+      author_name: author,
+      provider_name: source
+    } = oembed;
 
-    let p;
-    if (Duration.isMovie(url) || Duration.isAudio(url)) {
-      p = () => {
-        return Duration.estimate(url);
-      };
-    } else {
-      p = () => {
-        return Duration.estimate(content);
-      };
-    }
-
-    p().then((d) => {
-      input.duration = d;
-      info(`Finish estimating duration for ${url}`);
-      return resolve(input);
-    }).catch((err) => {
-      error(`Error while estimating duration for "${title}"`);
-      return reject(err);
-    });
-  });
+    input.type = type;
+    input.content = html;
+    input.author = author;
+    input.source = source;
+    return input;
+  } catch (err) {
+    error(err);
+    throw new Error(err);
+  }
 };
 
-export var extract = (link) => {
+var estimateDuration = async (input) => {
+  let {
+    url,
+    title,
+    content
+  } = input;
 
-  return new Promise((resolve, reject) => {
+  info(`Start estimating duration for ${url}`);
 
-    let url = removeUTM(link);
+  let p;
+  if (isMovie(url) || isAudio(url)) {
+    p = () => {
+      return estimate(url);
+    };
+  } else {
+    p = () => {
+      return estimate(content);
+    };
+  }
 
-    if (isExceptDomain(url)) {
-      return reject(new Error('This domain is blocked by configuration.'));
-    }
+  try {
+    let d = await p();
+    input.duration = d;
+    info(`Finish estimating duration for ${url}`);
+    return input;
+  } catch (err) {
+    error(`Error while estimating duration for "${title}"`);
+    throw new Error(err);
+  }
+};
 
+export var extract = async (link) => {
+
+  let url = removeUTM(link);
+
+  if (isExceptDomain(url)) {
+    throw new Error('This domain is blocked by configuration.');
+  }
+
+  try {
     let article = {
       url,
       title: '',
@@ -340,32 +378,32 @@ export var extract = (link) => {
 
     info(`Start extracting article data for ${url}`);
 
-    return getRemoteContent(article)
-      .then(extractMetaData)
-      .then(extractArticle)
-      .then(standalizeCanonicals)
-      .then(standalizeContent)
-      .then(standalizeDescription)
-      .then(standalizeImage)
-      .then(standalizeAuthor)
-      .then(standalizeStuff)
-      .then(estimateDuration)
-      .then((output) => {
-        info(`Finish extracting "${url}"`);
-        output.html = '';
-        delete output.html;
-        return resolve(output);
-      })
-      .catch((err) => {
-        error(err);
-        return reject(new Error(err.message || 'Something wrong while extracting article'));
-      });
-  });
+    let output = await getRemoteContent(article);
+    output = await extractMetaData(output);
+
+    if (isMovie(url) || isAudio(url)) {
+      output = await extractOEmbed(output);
+    } else {
+      output = await extractArticle(output);
+      output = await standalizeContent(output);
+      output = await standalizeDescription(output);
+      output = await standalizeImage(output);
+    }
+
+    output = await standalizeCanonicals(output);
+    output = await standalizeAuthor(output);
+    output = await standalizeStuff(output);
+    output = await estimateDuration(output);
+
+    info(`Finish extracting "${url}"`);
+    output.html = '';
+    delete output.html;
+
+    return output;
+
+  } catch (err) {
+    error(err);
+    throw new Error(err.message || 'Something wrong while extracting article');
+  }
 };
 
-let url = 'https://medium.com/reloading/javascript-start-up-performance-69200f43b201';
-extract(url).then((art) => {
-  console.log(art);
-}).catch((err) => {
-  console.log(err);
-});
