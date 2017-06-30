@@ -7,7 +7,6 @@
 
 var cheerio = require('cheerio');
 var sanitize = require('sanitize-html');
-var read = require('es6-readability');
 
 var debug = require('debug');
 var error = debug('artparser:error');
