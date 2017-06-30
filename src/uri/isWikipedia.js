@@ -1,15 +1,15 @@
+'use strict';
+
 /*
  * uri -> check if is Wikipedia
  * @ndaidong
 */
 
-let isWiki = (input) => {
-  let {
-    url
-  } = input;
+var isWiki = function isWiki(input) {
+  var url = input.url;
+
 
   return url.includes('wikipedia.org');
 };
-
 
 module.exports = isWiki;

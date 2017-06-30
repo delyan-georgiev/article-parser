@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * parser -> extract metadata from given link or html
  * @ndaidong
@@ -11,16 +13,15 @@ var debug = require('debug');
 var error = debug('artparser:error');
 var info = debug('artparser:info');
 
-var {
-  stripTags
-} = require('bellajs');
+var _require = require('bellajs'),
+    stripTags = _require.stripTags;
 
 var config = require('../config');
 var contentOnlyRule = config.article.htmlRules;
 
 var isWiki = require('../uri/isWikipedia');
 
-var extractByClass = (input) => {
+var extractByClass = function extractByClass(input) {
 
   if (isWiki(input)) {
     info('Found Wikipedia. Stop extracting with class...');
@@ -29,34 +30,24 @@ var extractByClass = (input) => {
 
   info('Extracting by class name...');
 
-  let {
-    html
-  } = input;
+  var html = input.html;
 
-  let content = '';
 
-  let $ = cheerio.load(html);
+  var content = '';
+
+  var $ = cheerio.load(html);
 
   if ($) {
 
-    let classes = [
-      '.post-content noscript',
-      '.post-body',
-      '.post-content',
-      '.article-body',
-      '.article-content',
-      '.entry-inner',
-      '.post',
-      'article'
-    ];
+    var classes = ['.post-content noscript', '.post-body', '.post-content', '.article-body', '.article-content', '.entry-inner', '.post', 'article'];
 
-    for (let i = 0; i < classes.length; i++) {
-      let c = $(classes[i]);
+    for (var i = 0; i < classes.length; i++) {
+      var c = $(classes[i]);
       if (c) {
         content = c.html();
         if (content) {
           input.contentByClassName = content;
-          info(`Content extracted with class name: ${content.length}`);
+          info('Content extracted with class name: ' + content.length);
           break;
         }
       }
@@ -68,9 +59,9 @@ var extractByClass = (input) => {
   return Promise.resolve(input);
 };
 
-var extractWithReadability = (input) => {
+var extractWithReadability = function extractWithReadability(input) {
 
-  return new Promise((resolve) => {
+  return new Promise(function (resolve) {
     info('Extracting using es6-readability...');
 
     if (isWiki(input)) {
@@ -78,19 +69,18 @@ var extractWithReadability = (input) => {
       return resolve(input);
     }
 
-    let {
-      html
-    } = input;
+    var html = input.html;
 
-    read(html).then((a) => {
+
+    read(html).then(function (a) {
       info('Finish extracting using es6-readability.');
       if (a && a.content) {
-        let content = a.content;
-        info(`Content extracted with es6-readability: ${content.length}`);
+        var content = a.content;
+        info('Content extracted with es6-readability: ' + content.length);
         input.contentByReadability = content;
       }
       return resolve(input);
-    }).catch((err) => {
+    }).catch(function (err) {
       error('Failed while extracting using es6-readability.');
       error(err);
       return resolve(input);
@@ -98,36 +88,35 @@ var extractWithReadability = (input) => {
   });
 };
 
-var extractWiki = (input) => {
+var extractWiki = function extractWiki(input) {
   if (isWiki(input)) {
     info('Extracting Wikipedia...');
 
-    let {
-      html
-    } = input;
+    var html = input.html;
 
-    let $ = cheerio.load(html);
+
+    var $ = cheerio.load(html);
 
     if ($) {
-      let c = $('#mw-content-text');
+      var c = $('#mw-content-text');
       if (c) {
-        let content = c.html();
+        var content = c.html();
         if (content) {
           input.wikiContent = content;
-          info(`Content extracted as Wikipedia: ${content.length}`);
+          info('Content extracted as Wikipedia: ' + content.length);
         }
       }
     }
-
   }
   return Promise.resolve(input);
 };
 
+var cleanify = function cleanify() {
+  var html = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
 
-var cleanify = (html = '') => {
   if (html) {
-    let s = sanitize(html, contentOnlyRule);
-    let $ = cheerio.load(s);
+    var s = sanitize(html, contentOnlyRule);
+    var $ = cheerio.load(s);
 
     $('a').attr('target', '_blank');
     html = $.html();
@@ -135,25 +124,28 @@ var cleanify = (html = '') => {
   return html;
 };
 
-var normalize = (input) => {
+var normalize = function normalize(input) {
 
   info('Normalizing article content...');
 
-  let {
-    content = '',
-    contentByClassName = '',
-    contentByReadability = '',
-    wikiContent = ''
-  } = input;
+  var _input$content = input.content,
+      content = _input$content === undefined ? '' : _input$content,
+      _input$contentByClass = input.contentByClassName,
+      contentByClassName = _input$contentByClass === undefined ? '' : _input$contentByClass,
+      _input$contentByReada = input.contentByReadability,
+      contentByReadability = _input$contentByReada === undefined ? '' : _input$contentByReada,
+      _input$wikiContent = input.wikiContent,
+      wikiContent = _input$wikiContent === undefined ? '' : _input$wikiContent;
+
 
   if (wikiContent) {
     content = cleanify(wikiContent);
   } else {
-    let c1 = cleanify(contentByClassName);
-    let c2 = cleanify(contentByReadability);
+    var c1 = cleanify(contentByClassName);
+    var c2 = cleanify(contentByReadability);
 
-    let s1 = stripTags(c1);
-    let s2 = stripTags(c2);
+    var s1 = stripTags(c1);
+    var s2 = stripTags(c2);
 
     content = s1.length < s2.length ? c1 : c2;
   }
@@ -161,24 +153,23 @@ var normalize = (input) => {
   return Promise.resolve(content);
 };
 
-var getArticle = (html, url = '') => {
-  return new Promise((resolve, reject) => {
+var getArticle = function getArticle(html) {
+  var url = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+
+  return new Promise(function (resolve, reject) {
     info('Start extracting article from HTML');
     extractByClass({
-      html,
+      html: html,
       content: '',
-      url
-    }).then(extractWithReadability)
-      .then(extractWiki)
-      .then(normalize)
-      .then((pureContent) => {
-        info('Finish extracting article from HTML');
-        return resolve(pureContent);
-      }).catch((err) => {
-        error('Something wrong when extracting article from HTML');
-        error(err);
-        return reject(err);
-      });
+      url: url
+    }).then(extractWithReadability).then(extractWiki).then(normalize).then(function (pureContent) {
+      info('Finish extracting article from HTML');
+      return resolve(pureContent);
+    }).catch(function (err) {
+      error('Something wrong when extracting article from HTML');
+      error(err);
+      return reject(err);
+    });
   });
 };
 

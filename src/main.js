@@ -1,10 +1,14 @@
+'use strict';
+
 /**
  * Article parser
  * @ndaidong
  **/
 
 var bella = require('bellajs');
-var {stabilize} = require('stabilize.js');
+
+var _require = require('stabilize.js'),
+    stabilize = _require.stabilize;
 
 var fetch = require('node-fetch');
 
@@ -15,99 +19,92 @@ var info = debug('artparser:info');
 global.Promise = require('promise-wtf');
 
 var config = require('./config');
-var {configure, FETCH_OPTIONS} = config;
+var configure = config.configure,
+    FETCH_OPTIONS = config.FETCH_OPTIONS;
+
 
 var Duration = require('./duration');
 
-var {
-  absolutify,
-  purify,
-  removeUTM,
-  getDomain,
-  isWikipedia,
-  isValidURL,
-  isExceptDomain,
-  absolutifyContentSrc
-} = require('./uri');
+var _require2 = require('./uri'),
+    absolutify = _require2.absolutify,
+    purify = _require2.purify,
+    removeUTM = _require2.removeUTM,
+    getDomain = _require2.getDomain,
+    isWikipedia = _require2.isWikipedia,
+    isValidURL = _require2.isValidURL,
+    isExceptDomain = _require2.isExceptDomain,
+    absolutifyContentSrc = _require2.absolutifyContentSrc;
 
-var {
-  parseWithEmbedly,
-  parseMeta,
-  getArticle
-} = require('./parser');
+var _require3 = require('./parser'),
+    parseWithEmbedly = _require3.parseWithEmbedly,
+    parseMeta = _require3.parseMeta,
+    getArticle = _require3.getArticle;
+
+var getRemoteContent = function getRemoteContent(input) {
+
+  return new Promise(function (resolve, reject) {
+    var url = input.url;
 
 
-var getRemoteContent = (input) => {
+    info('Start fetching HTML content from ' + url);
 
-  return new Promise((resolve, reject) => {
-    let {
-      url
-    } = input;
+    var _url = '';
 
-    info(`Start fetching HTML content from ${url}`);
+    fetch(url, FETCH_OPTIONS).then(function (res) {
+      var ok = res.ok,
+          status = res.status,
+          headers = res.headers;
 
-    let _url = '';
-
-    fetch(url, FETCH_OPTIONS)
-      .then((res) => {
-        let {
-          ok,
-          status,
-          headers
-        } = res;
-        if (!ok || status !== 200) {
-          return reject(new Error(`Fetching failed for ${url}`));
-        }
-        let contentType = headers.get('content-type');
-        if (!contentType.startsWith('text/')) {
-          return reject(new Error(`Could not handle ${contentType}`));
-        }
-        info(`Retrieved HTML content from ${url}`);
-        _url = purify(res.url);
-        return res.text();
-      })
-      .then((html) => {
-        info(`Finish fetching HTML content from ${url}`);
-        if (!html) {
-          info('Returned HTML is empty. Exit process.');
-          return reject(new Error(`No HTML content retrieved for ${url}`));
-        }
-        input.canonicals.push(_url);
-        input.url = _url;
-        input.html = html;
-        return resolve(input);
-      }).catch((err) => {
-        error(`Error while fetching remote data from "${url}"`);
-        error(err);
-        return reject(err);
-      });
+      if (!ok || status !== 200) {
+        return reject(new Error('Fetching failed for ' + url));
+      }
+      var contentType = headers.get('content-type');
+      if (!contentType.startsWith('text/')) {
+        return reject(new Error('Could not handle ' + contentType));
+      }
+      info('Retrieved HTML content from ' + url);
+      _url = purify(res.url);
+      return res.text();
+    }).then(function (html) {
+      info('Finish fetching HTML content from ' + url);
+      if (!html) {
+        info('Returned HTML is empty. Exit process.');
+        return reject(new Error('No HTML content retrieved for ' + url));
+      }
+      input.canonicals.push(_url);
+      input.url = _url;
+      input.html = html;
+      return resolve(input);
+    }).catch(function (err) {
+      error('Error while fetching remote data from "' + url + '"');
+      error(err);
+      return reject(err);
+    });
   });
 };
 
-var extractMetaData = (input) => {
+var extractMetaData = function extractMetaData(input) {
+  var html = input.html,
+      url = input.url;
 
-  let {
-    html,
-    url
-  } = input;
 
-  info(`Start extracting metadata for ${url}`);
+  info('Start extracting metadata for ' + url);
 
-  let meta = parseMeta(html, url);
+  var meta = parseMeta(html, url);
 
-  let {
-    canonical,
-    title,
-    description,
-    image,
-    author,
-    source,
-    publishedTime
-  } = meta;
+  var canonical = meta.canonical,
+      title = meta.title,
+      description = meta.description,
+      image = meta.image,
+      author = meta.author,
+      source = meta.source,
+      publishedTime = meta.publishedTime;
+
 
   if (meta.url) {
-    let _url = meta.url;
-    let {canonicals} = input;
+    var _url = meta.url;
+    var canonicals = input.canonicals;
+
     input.canonicals = canonicals.concat([_url, canonical]);
     input.url = _url;
   }
@@ -123,200 +120,190 @@ var extractMetaData = (input) => {
   input.source = source;
   input.publishedTime = publishedTime;
 
-  info(`Finish extracting metadata for ${url}`);
+  info('Finish extracting metadata for ' + url);
 
   return Promise.resolve(input);
 };
 
-var extractArticle = (input) => {
+var extractArticle = function extractArticle(input) {
 
-  return new Promise((resolve, reject) => {
-    let {
-      url,
-      html
-    } = input;
+  return new Promise(function (resolve, reject) {
+    var url = input.url,
+        html = input.html;
 
-    info(`Start extracting main article for ${url}`);
-    getArticle(html, url).then((content) => {
-      info(`Finish extracting main article for ${url}`);
+
+    info('Start extracting main article for ' + url);
+    getArticle(html, url).then(function (content) {
+      info('Finish extracting main article for ' + url);
       if (content) {
-        info(`Determined main article for ${url}`);
+        info('Determined main article for ' + url);
         input.content = content;
         return resolve(input);
       }
       return reject(new Error('No article extracted. Cancel process.'));
-    }).catch((err) => {
-      error(`Error while extracting main article for ${url}`);
+    }).catch(function (err) {
+      error('Error while extracting main article for ' + url);
       error(err);
       return reject(err);
     });
   });
 };
 
-var standalizeCanonicals = (input) => {
+var standalizeCanonicals = function standalizeCanonicals(input) {
+  var canonicals = input.canonicals;
 
-  let {
-    canonicals
-  } = input;
 
-  info(`Start standalizing canonicals for ${input.url}`);
+  info('Start standalizing canonicals for ' + input.url);
 
-  let arr = canonicals.filter((url) => {
+  var arr = canonicals.filter(function (url) {
     return url && url.length > 10;
-  }).map((url) => {
+  }).map(function (url) {
     if (url.startsWith('//')) {
       url = 'http:' + url;
     }
     return purify(url);
-  }).filter((url) => {
+  }).filter(function (url) {
     return isValidURL(url);
   });
 
   input.canonicals = stabilize(arr).unique();
 
-  info(`Finish standalizing canonicals for ${input.url}`);
+  info('Finish standalizing canonicals for ' + input.url);
 
   return Promise.resolve(input);
 };
 
-var standalizeContent = (input) => {
+var standalizeContent = function standalizeContent(input) {
+  var url = input.url,
+      content = input.content;
 
-  let {
-    url,
-    content
-  } = input;
 
-  info(`Start standalizing content for ${url}`);
+  info('Start standalizing content for ' + url);
 
   input.content = absolutifyContentSrc(content, url);
 
-  info(`Finish standalizing content for ${url}`);
+  info('Finish standalizing content for ' + url);
   return Promise.resolve(input);
 };
 
-var standalizeDescription = (input) => {
-  let {
-    url,
-    description,
-    content
-  } = input;
+var standalizeDescription = function standalizeDescription(input) {
+  var url = input.url,
+      description = input.description,
+      content = input.content;
 
-  info(`Start standalizing description for ${url}`);
 
-  let s = bella.stripTags(description || content);
+  info('Start standalizing description for ' + url);
+
+  var s = bella.stripTags(description || content);
   input.description = bella.truncate(s, 156);
 
-  info(`Finish standalizing description for ${url}`);
+  info('Finish standalizing description for ' + url);
   return Promise.resolve(input);
 };
 
-var standalizeImage = (input) => {
-  let {
-    url,
-    image
-  } = input;
+var standalizeImage = function standalizeImage(input) {
+  var url = input.url,
+      image = input.image;
 
-  info(`Start standalizing image for ${url}`);
+
+  info('Start standalizing image for ' + url);
 
   if (image) {
-    info(`Before: ${image}`);
+    info('Before: ' + image);
     input.image = absolutify(url, image);
-    info(`After: ${input.image}`);
+    info('After: ' + input.image);
   }
 
-  info(`Finish standalizing image for ${url}`);
+  info('Finish standalizing image for ' + url);
 
   return Promise.resolve(input);
 };
 
-var standalizeAuthor = (input) => {
-  let {
-    url,
-    author
-  } = input;
+var standalizeAuthor = function standalizeAuthor(input) {
+  var url = input.url,
+      author = input.author;
 
-  info(`Start standalizing author name for ${url}`);
+
+  info('Start standalizing author name for ' + url);
 
   if (author && author.indexOf(' ') > 0) {
-    info(`Before: ${author}`);
+    info('Before: ' + author);
     input.author = bella.ucwords(author);
-    info(`After: ${input.author}`);
+    info('After: ' + input.author);
   }
 
-  info(`Finish standalizing author for ${url}`);
+  info('Finish standalizing author for ' + url);
   return Promise.resolve(input);
 };
 
-var standalizeStuff = (input) => {
-  let {
-    url,
-    title,
-    source
-  } = input;
+var standalizeStuff = function standalizeStuff(input) {
+  var url = input.url,
+      title = input.title,
+      source = input.source;
 
-  info(`Fix some stuffs for ${url}`);
 
-  let domain = getDomain(url);
+  info('Fix some stuffs for ' + url);
+
+  var domain = getDomain(url);
   input.domain = domain;
   if (!source) {
     input.source = domain;
   }
 
-  let t = bella.time();
+  var t = bella.time();
   input.alias = bella.createAlias(title) + '-' + t;
 
-  let tit = bella.stripTags(title);
+  var tit = bella.stripTags(title);
   input.title = bella.truncate(tit, 118);
 
-  info(`Almost done with ${url}`);
+  info('Almost done with ' + url);
 
   return Promise.resolve(input);
 };
 
-var estimateDuration = (input) => {
-  return new Promise((resolve, reject) => {
-    let {
-      url,
-      title,
-      content
-    } = input;
+var estimateDuration = function estimateDuration(input) {
+  return new Promise(function (resolve, reject) {
+    var url = input.url,
+        title = input.title,
+        content = input.content;
 
-    info(`Start estimating duration for ${url}`);
 
-    let p;
+    info('Start estimating duration for ' + url);
+
+    var p = void 0;
     if (Duration.isMovie(url) || Duration.isAudio(url)) {
-      p = () => {
+      p = function p() {
         return Duration.estimate(url);
       };
     } else {
-      p = () => {
+      p = function p() {
         return Duration.estimate(content);
       };
     }
 
-    p().then((d) => {
+    p().then(function (d) {
       input.duration = d;
-      info(`Finish estimating duration for ${url}`);
+      info('Finish estimating duration for ' + url);
       return resolve(input);
-    }).catch((err) => {
-      error(`Error while estimating duration for "${title}"`);
+    }).catch(function (err) {
+      error('Error while estimating duration for "' + title + '"');
       return reject(err);
     });
   });
 };
 
-var extract = (link) => {
+var extract = function extract(link) {
 
-  return new Promise((resolve, reject) => {
+  return new Promise(function (resolve, reject) {
 
-    let url = removeUTM(link);
+    var url = removeUTM(link);
 
     if (isExceptDomain(url)) {
       return reject(new Error('This domain is blocked by configuration.'));
     }
 
-    let article = {
-      url,
+    var article = {
+      url: url,
       title: '',
       alias: '',
       description: '',
@@ -329,41 +316,30 @@ var extract = (link) => {
       duration: 0
     };
 
-    info(`Start extracting article data for ${url}`);
+    info('Start extracting article data for ' + url);
 
-    return getRemoteContent(article)
-      .then(extractMetaData)
-      .then(extractArticle)
-      .then(standalizeCanonicals)
-      .then(standalizeContent)
-      .then(standalizeDescription)
-      .then(standalizeImage)
-      .then(standalizeAuthor)
-      .then(standalizeStuff)
-      .then(estimateDuration)
-      .then((output) => {
-        info(`Finish extracting "${url}"`);
-        output.html = '';
-        delete output.html;
-        return resolve(output);
-      })
-      .catch((err) => {
-        error(err);
-        return reject(new Error(err.message || 'Something wrong while extracting article'));
-      });
+    return getRemoteContent(article).then(extractMetaData).then(extractArticle).then(standalizeCanonicals).then(standalizeContent).then(standalizeDescription).then(standalizeImage).then(standalizeAuthor).then(standalizeStuff).then(estimateDuration).then(function (output) {
+      info('Finish extracting "' + url + '"');
+      output.html = '';
+      delete output.html;
+      return resolve(output);
+    }).catch(function (err) {
+      error(err);
+      return reject(new Error(err.message || 'Something wrong while extracting article'));
+    });
   });
 };
 
 module.exports = {
-  configure,
-  getConfig: () => {
+  configure: configure,
+  getConfig: function getConfig() {
     return bella.clone(config);
   },
-  extract,
-  getArticle,
-  getDomain,
-  parseMeta,
-  parseWithEmbedly,
-  absolutify,
-  purify
+  extract: extract,
+  getArticle: getArticle,
+  getDomain: getDomain,
+  parseMeta: parseMeta,
+  parseWithEmbedly: parseWithEmbedly,
+  absolutify: absolutify,
+  purify: purify
 };

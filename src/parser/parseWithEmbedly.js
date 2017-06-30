@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * parser -> with Embedly
  * @ndaidong
@@ -11,36 +13,39 @@ var info = debug('artparser:info');
 
 var config = require('../config');
 
-var {FETCH_OPTIONS} = config;
+var FETCH_OPTIONS = config.FETCH_OPTIONS;
 
-var parseWithEmbedly = (url, key = '') => {
-  return new Promise((resolve, reject) => {
 
-    info(`Start parsing with Embedly...`);
+var parseWithEmbedly = function parseWithEmbedly(url) {
+  var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+
+  return new Promise(function (resolve, reject) {
+
+    info('Start parsing with Embedly...');
     info(url);
 
-    let u = encodeURIComponent(url);
-    let k = key || config.EmbedlyKey || '';
-    let target = `http://api.embed.ly/1/extract?key=${k}&url=${u}&format=json`;
+    var u = encodeURIComponent(url);
+    var k = key || config.EmbedlyKey || '';
+    var target = 'http://api.embed.ly/1/extract?key=' + k + '&url=' + u + '&format=json';
 
-    return fetch(target, FETCH_OPTIONS).then((res) => {
-      info(`Loaded data from Embedly.`);
+    return fetch(target, FETCH_OPTIONS).then(function (res) {
+      info('Loaded data from Embedly.');
       return res.json();
-    }).then((o) => {
-      info(`Standalizing data structure...`);
-      let author = '';
-      let authors = o.authors || [];
+    }).then(function (o) {
+      info('Standalizing data structure...');
+      var author = '';
+      var authors = o.authors || [];
       if (authors.length) {
-        author = authors.reduce((prev, curr) => {
+        author = authors.reduce(function (prev, curr) {
           return prev.concat([curr.name]);
         }, []).join(', ');
       }
-      let image = '';
-      let images = o.images || [];
+      var image = '';
+      var images = o.images || [];
       if (images.length) {
-        let maxw = 0;
-        let maxh = 0;
-        images.forEach((img) => {
+        var maxw = 0;
+        var maxh = 0;
+        images.forEach(function (img) {
           if (img.width > maxw && img.height > maxh) {
             image = img.url;
             maxw = img.width;
@@ -48,17 +53,17 @@ var parseWithEmbedly = (url, key = '') => {
           }
         });
       }
-      info(`Finish parsing with Embedly.`);
+      info('Finish parsing with Embedly.');
       return resolve({
         url: o.url,
         title: o.title,
         description: o.description,
-        author,
+        author: author,
         source: o.provider_name || '',
-        image,
+        image: image,
         content: o.content
       });
-    }).catch((err) => {
+    }).catch(function (err) {
       error('Error while parsing with Embedly');
       info(url);
       error(err);

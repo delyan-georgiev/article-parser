@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * uri -> clean unecessary parts of a url
  * @ndaidong
@@ -9,14 +11,14 @@ var isAdsDomain = require('./isAdsDomain');
 var isValidURL = require('./isValidURL');
 var removeUTM = require('./removeUTM');
 
-var purify = (url) => {
+var purify = function purify(url) {
   url = removeUTM(url);
   if (!isValidURL(url)) {
     return false;
   }
-  let g = URL.parse(url);
-  let u = [g.protocol, '//', g.host, g.pathname].join('');
-  let isBad = isAdsDomain(url) || !g.search || g.search.indexOf('=') === -1;
+  var g = URL.parse(url);
+  var u = [g.protocol, '//', g.host, g.pathname].join('');
+  var isBad = isAdsDomain(url) || !g.search || g.search.indexOf('=') === -1;
   if (isBad) {
     return u;
   }

@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * uri -> ensure all path in a HTML content are absolute
  * @ndaidong
@@ -7,21 +9,21 @@ var cheerio = require('cheerio');
 
 var absolutify = require('./absolutify');
 
-var absolutifyContentSrc = (s, url) => {
-  let $ = cheerio.load(s, {
+var absolutifyContentSrc = function absolutifyContentSrc(s, url) {
+  var $ = cheerio.load(s, {
     normalizeWhitespace: true,
     decodeEntities: true
   });
 
-  $('a').each((i, elem) => {
-    let href = $(elem).attr('href');
+  $('a').each(function (i, elem) {
+    var href = $(elem).attr('href');
     if (href) {
       $(elem).attr('href', absolutify(url, href));
     }
   });
 
-  $('img').each((i, elem) => {
-    let src = $(elem).attr('src');
+  $('img').each(function (i, elem) {
+    var src = $(elem).attr('src');
     if (src) {
       $(elem).attr('src', absolutify(url, src));
     }

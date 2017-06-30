@@ -1,3 +1,5 @@
+'use strict';
+
 var isInBlackList = require('./isInBlackList');
 var isAdsDomain = require('./isAdsDomain');
 var isExceptDomain = require('./isExceptDomain');
@@ -10,14 +12,14 @@ var getDomain = require('./getDomain');
 var absolutifyContentSrc = require('./absolutifyContentSrc');
 
 module.exports = {
-  isInBlackList,
-  isAdsDomain,
-  isExceptDomain,
-  isValidURL,
-  isWikipedia,
-  removeUTM,
-  absolutify,
-  purify,
-  getDomain,
-  absolutifyContentSrc
+  isInBlackList: isInBlackList,
+  isAdsDomain: isAdsDomain,
+  isExceptDomain: isExceptDomain,
+  isValidURL: isValidURL,
+  isWikipedia: isWikipedia,
+  removeUTM: removeUTM,
+  absolutify: absolutify,
+  purify: purify,
+  getDomain: getDomain,
+  absolutifyContentSrc: absolutifyContentSrc
 };

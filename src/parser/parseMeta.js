@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * parser -> extract metadata from given link or html
  * @ndaidong
@@ -5,18 +7,17 @@
 
 var cheerio = require('cheerio');
 
-var {
-  isValidURL
-} = require('../uri');
+var _require = require('../uri'),
+    isValidURL = _require.isValidURL;
 
-var strtolower = (s) => {
+var strtolower = function strtolower(s) {
   return s ? s.toLowerCase() : '';
 };
 
-var parseMeta = (html, url) => {
+var parseMeta = function parseMeta(html, url) {
 
-  let entry = {
-    url,
+  var entry = {
+    url: url,
     canonical: '',
     title: '',
     description: '',
@@ -26,43 +27,15 @@ var parseMeta = (html, url) => {
     publishedTime: ''
   };
 
-  let sourceAttrs = [
-    'application-name',
-    'og:site_name',
-    'dc.title'
-  ];
-  let urlAttrs = [
-    'og:url',
-    'twitter:url'
-  ];
-  let titleAttrs = [
-    'title',
-    'og:title',
-    'twitter:title'
-  ];
-  let descriptionAttrs = [
-    'description',
-    'og:description',
-    'twitter:description'
-  ];
-  let imageAttrs = [
-    'og:image',
-    'twitter:image',
-    'twitter:image:src'
-  ];
-  let authorAttrs = [
-    'author',
-    'creator',
-    'og:creator',
-    'og:article:author',
-    'twitter:creator',
-    'dc.creator'
-  ];
-  let publishedTimeAttrs = [
-    'article:published_time'
-  ];
+  var sourceAttrs = ['application-name', 'og:site_name', 'dc.title'];
+  var urlAttrs = ['og:url', 'twitter:url'];
+  var titleAttrs = ['title', 'og:title', 'twitter:title'];
+  var descriptionAttrs = ['description', 'og:description', 'twitter:description'];
+  var imageAttrs = ['og:image', 'twitter:image', 'twitter:image:src'];
+  var authorAttrs = ['author', 'creator', 'og:creator', 'og:article:author', 'twitter:creator', 'dc.creator'];
+  var publishedTimeAttrs = ['article:published_time'];
 
-  let doc = cheerio.load(html, {
+  var doc = cheerio.load(html, {
     lowerCaseTags: true,
     lowerCaseAttributeNames: true,
     recognizeSelfClosing: true
@@ -70,23 +43,23 @@ var parseMeta = (html, url) => {
 
   entry.title = doc('title').text();
 
-  doc('link').each((i, link) => {
-    let m = doc(link);
-    let rel = m.attr('rel');
+  doc('link').each(function (i, link) {
+    var m = doc(link);
+    var rel = m.attr('rel');
     if (rel && rel === 'canonical') {
-      let href = m.attr('href');
+      var href = m.attr('href');
       if (isValidURL(href)) {
         entry.canonical = href;
       }
     }
   });
 
-  doc('meta').each((i, meta) => {
+  doc('meta').each(function (i, meta) {
 
-    let m = doc(meta);
-    let content = m.attr('content');
-    let property = strtolower(m.attr('property'));
-    let name = strtolower(m.attr('name'));
+    var m = doc(meta);
+    var content = m.attr('content');
+    var property = strtolower(m.attr('property'));
+    var name = strtolower(m.attr('name'));
 
     if (sourceAttrs.includes(property) || sourceAttrs.includes(name)) {
       entry.source = content;

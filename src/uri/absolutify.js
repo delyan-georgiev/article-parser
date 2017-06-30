@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * uri -> convert a relative url to absolute
  * @ndaidong
@@ -8,12 +10,12 @@ var bella = require('bellajs');
 
 var isValidURL = require('./isValidURL');
 
-var absolutify = (fullUrl, relativeUrl) => {
+var absolutify = function absolutify(fullUrl, relativeUrl) {
   if (!isValidURL(fullUrl) || !bella.isString(relativeUrl)) {
     return '';
   }
-  let parsed = URL.parse(fullUrl);
-  let first = [parsed.protocol, parsed.host].join('//');
+  var parsed = URL.parse(fullUrl);
+  var first = [parsed.protocol, parsed.host].join('//');
   return URL.resolve(first, relativeUrl);
 };
 
