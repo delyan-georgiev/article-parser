@@ -1,11 +1,11 @@
 {
   "version": "1.6.4",
-  "name": "article-parser",
-  "description": "Extract clean article data from given URL.",
+  "name": "es5-article-parser",
+  "description": "Extract clean article data from given URL. For node versions under 6",
   "homepage": "https://www.npmjs.com/package/article-parser",
   "repository": {
     "type": "git",
-    "url": "git@github.com:ndaidong/article-parser.git"
+    "url": "git@github.com:delyan-georgiev/article-parser.git"
   },
   "author": "@ndaidong",
   "main": "./index.js",
